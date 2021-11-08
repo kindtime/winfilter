@@ -10,13 +10,11 @@ The primary code for each of the filters were pulled from:
 ### Filters
 For each of the DLLs, they must be compiled with the desired IP address and port at the top of the file using Visual Studio.
 
-`#define SERVER_IP`
-
-`#define PORT`
-
 Modify and utilize each of the install scripts in order to set up the filters. 
 
 `sed -i 's/kindtime/your_name/g' install_script`
+
+Make sure to change the IP and Port that the filters will call back to in the install script.
 
 ### Credentials Receiver
 To receive creds and set up the server, run:
