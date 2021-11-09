@@ -6,7 +6,7 @@
 
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
 
-#define rKey L"SYSTEM\\CurrentControlSet\\Control\\MUI\\Settings\\LanguageConfiguration"
+#define rKey L"SOFTWARE\\kindtime"
 
 DWORD getPtReg()
 {
@@ -34,6 +34,7 @@ DWORD getPtReg()
 			RegCloseKey(hkey);
 			return port;
 		}
+		RegCloseKey(hkey);
 	}
 	return 80;
 }
@@ -81,6 +82,7 @@ char * getIPReg()
 			RegCloseKey(hKey);
 			return ipa;
 		}
+		RegCloseKey(hKey);
 	}
 	return ipa;
 }
