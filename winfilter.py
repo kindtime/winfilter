@@ -28,7 +28,7 @@ def handle_client(conn, addr):
 
 def writeFile(storage, addr):
     ip = addr[0]
-    with open(f'creds/{ip}.txt', 'a') as f:
+    with open(f'creds/{ip}', 'a') as f:
         f.write(storage)
 
 
