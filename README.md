@@ -12,7 +12,7 @@ For each of the DLLs, they must be compiled with the desired IP address and port
 
 Modify and utilize each of the install scripts in order to set up the filters. 
 
-`sed -i 's/kindtime/your_name/g' install_script`
+`sed -i 's/password/your_dll_name/g' install_script`
 
 Make sure to change the IP and Port that the filters will call back to in the install script.
 
@@ -29,3 +29,10 @@ Screenshot Example:
 ![photo](photos/photo.png)
 
 Credentials will also be written to a file in the `creds` directory. Use the `--clean` option to clear out the directory.
+
+### Sharing Creds
+Credentials are written to the `creds` directory. Start a Python HTTP server in this directory, and have other use the command below.
+
+`curl <red_ip>:8000/<blue_ip>`
+
+Discord Webhook functionality is also available. Uncomment the `discordWH` function call in the `winfilter.py` file and modify the url variable.
