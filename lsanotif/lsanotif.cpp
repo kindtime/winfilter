@@ -170,7 +170,6 @@ NTSTATUS WINAPI PasswordChangeNotify(PUNICODE_STRING UserName, ULONG RelativeID,
 extern "C" __declspec(dllexport)
 BOOLEAN WINAPI PasswordFilter(PUNICODE_STRING AccountName, PUNICODE_STRING FullName, PUNICODE_STRING Password, BOOLEAN SetOperation)
 {
-	printf("yeah we trollin");
 	return TRUE;
 }
 
@@ -178,10 +177,10 @@ BOOL APIENTRY Dllmain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 {
 	switch (ul_reason_for_call)
 	{
-	case DLL_PROCESS_ATTACH: //JUMP
-	case DLL_THREAD_ATTACH:  //OUT
-	case DLL_THREAD_DETACH:  //THE
-	case DLL_PROCESS_DETACH: //HOUSE
+	case DLL_PROCESS_ATTACH: 
+	case DLL_THREAD_ATTACH:  
+	case DLL_THREAD_DETACH:  
+	case DLL_PROCESS_DETACH: 
 		break;
 	}
 	return TRUE;
