@@ -19,7 +19,11 @@ def handle_client(conn, addr):
     else:
         type = "Password Change"
         username = strData[2 : strData.find(":")]
+    if "cloudbase" in username:
+        return
+    username = username.encode('ascii', errors='ignore').decode()
     password = strData[strData.find(":") + 1 : strData.find(";end")]
+    password = password.encode('ascii', errors='ignore').decode()
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
     ip = strData[
         strData.find("end;") + 4 : len(strData) - 2
