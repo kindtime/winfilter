@@ -7,7 +7,7 @@ import datetime
 
 print_lock = threading.Lock()
 
-pwnboard = "http://lumbercamp.pwnboard.win/pwn/boxaccess"
+pwnboard = "http://pwnboard.win/pwn/credential"
 
 def handle_client(conn, addr):
     data = conn.recv(1024)
@@ -127,7 +127,6 @@ def main():
             t.start()
 
     except KeyboardInterrupt:
-        print("\nArrivederci!")
         exit(0)
 
 
