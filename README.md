@@ -7,6 +7,10 @@ The primary code for each of the filters were pulled from:
 - https://github.com/3gstudent/PasswordFilter
 
 ## Usage
+
+### Building
+Mingw is used to compile each dll. Install on your system before compiling, and then use `make` to build each dll. Binaries will exist in `bin/`.
+
 ### Filters
 1) Modify the IP (`$ipa`) and Port (`$pt`) that the filters will call back to in the `kindtime_key.ps1` script. 
 

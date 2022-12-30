@@ -108,7 +108,7 @@ def main():
         default=80,
     )
     parser.add_argument("--clean", dest="clean", action="store_true")
-    parser.set_defaults(clean=False)
+    parser.set_defaults(clean=True)
     args = parser.parse_args()
 
     if args.clean:
