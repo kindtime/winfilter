@@ -1,13 +1,7 @@
 # WinFilter
 Winlogon and LSA Notification Password Filters 
 
-## Reference
-The primary code for each of the filters were pulled from:
-- https://github.com/gtworek/PSBits/tree/master/PasswordStealing
-- https://github.com/3gstudent/PasswordFilter
-
 ## Usage
-
 ### Building
 Mingw is used to compile each dll. Install on your system before compiling, and then use `make` to build each dll. Binaries will exist in `bin/`.
 
@@ -32,20 +26,6 @@ Screenshot Example:
 
 ![photo](photos/photo.png)
 
-Credentials will also be written to a file in the `creds` directory. Use the `--clean` option to clear out the directory.
 
 ### Sharing Creds
-
-Creds are shipped to pwnboard via the `updatePwnboard` function. Make sure the url is correct at the top of the script.
-
-### Other Methods
-Credentials are written to the `creds` directory. Start a Python HTTP server in this directory, and have other use the command below.
-
-```sh
-curl <red_ip>:8000/<blue_ip>
-```
-
-Discord Webhook functionality is also available. Uncomment the `discordWH` function call in the `winfilter.py` file and modify the url variable.
-
-
-
+There are three options to share creds: `--pwnboard [URL]`, `--discord [URL]`, `--write`. Any of the options can be utilized at the same time. 
