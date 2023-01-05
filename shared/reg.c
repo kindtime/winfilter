@@ -1,5 +1,4 @@
-#include "lsanotif.h"
-#include "pch.h"
+#include "winfilter.h"
 
 DWORD getPtReg()
 {
@@ -9,14 +8,15 @@ DWORD getPtReg()
 	DWORD Datasize = 255;
 	DWORD port;
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
 		rKey,
 		0,
 		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
 		&hkey) == ERROR_SUCCESS)
+
 	{
-		DWORD error = RegQueryValueEx(hkey,
-			L"pt",
+		DWORD error = RegQueryValueExA(hkey,
+			"pt",
 			NULL,
 			&Type,
 			(LPBYTE)&port,
@@ -32,7 +32,7 @@ DWORD getPtReg()
 	return 80;
 }
 
-char* getIPReg(const wchar_t* input)
+char* getIPReg(const char* input)
 {
 	HKEY hKey;
 	char Data[255];
@@ -41,14 +41,13 @@ char* getIPReg(const wchar_t* input)
 	char* ipa = (char*)malloc(20);
 	int indCtr = 0;
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
 		rKey,
 		0,
 		KEY_QUERY_VALUE | KEY_WOW64_32KEY,
 		&hKey) == ERROR_SUCCESS)
-
 	{
-		DWORD error = RegQueryValueEx(hKey,
+		DWORD error = RegQueryValueExA(hKey,
 			input,
 			NULL,
 			&Type,
@@ -57,24 +56,11 @@ char* getIPReg(const wchar_t* input)
 
 		if (error == ERROR_SUCCESS)
 		{
-			for (int i = 0; i < sizeof(Data); i += 2)
-			{
-				if (Data[i] == '\0')
-				{
-					ipa[indCtr] = '\0';
-					break;
-				}
-				else
-				{
-					ipa[indCtr] = Data[i];
-					indCtr++;
-				}
-			}
+			strncpy(ipa, Data, strlen(Data));
 			RegCloseKey(hKey);
 			return ipa;
 		}
 		RegCloseKey(hKey);
 	}
-	sprintf(ipa, "%s", "8.8.8.8");
-	return ipa;
+	return "8.8.8.8";
 }
