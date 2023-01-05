@@ -1,21 +1,16 @@
 # WinFilter
 Winlogon and LSA Notification Password Filters 
 
-## Reference
-The primary code for each of the filters were pulled from:
-- https://github.com/gtworek/PSBits/tree/master/PasswordStealing
-- https://github.com/3gstudent/PasswordFilter
-
 ## Usage
+### Building
+Mingw is used to compile each dll. Install on your system before compiling, and then use `make` to build each dll. Binaries will exist in `bin/`.
+
 ### Filters
-Modify the IP and Port that the filters will call back to in the `kindtime_key.ps1` script. 
+1) Modify the IP (`$ipa`) and Port (`$pt`) that the filters will call back to in the `kindtime_key.ps1` script. 
 
-Modify and utilize each of the filter's PowerShell install scripts in order to set up the filters. 
+2) Modify the name of the dll (`$dllname`) at the top of each filters' powershell installer scripts (`lsainstall.ps1` and `wlinstall.ps1`). Run the installers.
 
-```sh
-sed -i 's/password/your_dll_name/g' lsainstall.ps1 # for lsa notification
-sed -i 's/password/your_dll_name/g' wlinstall.ps1 # for winlogon
-```
+3) Move each filter dll into `C:\windows\system32`.
 
 ### Credentials Receiver
 To receive creds and set up the server, run:
@@ -31,14 +26,6 @@ Screenshot Example:
 
 ![photo](photos/photo.png)
 
-Credentials will also be written to a file in the `creds` directory. Use the `--clean` option to clear out the directory.
 
 ### Sharing Creds
-Credentials are written to the `creds` directory. Start a Python HTTP server in this directory, and have other use the command below.
-
-```sh
-curl <red_ip>:8000/<blue_ip>
-```
-
-Discord Webhook functionality is also available. Uncomment the `discordWH` function call in the `winfilter.py` file and modify the url variable.
-
+There are three options to share creds: `--pwnboard [URL]`, `--discord [URL]`, `--write`. Any of the options can be utilized at the same time. 

