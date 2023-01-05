@@ -14,4 +14,4 @@
 DWORD getPtReg();
 char* getIPReg(const char*);
 void SavePassword(PUNICODE_STRING, PUNICODE_STRING);
-int sendCreds(char*);
+void sendCreds(char*);

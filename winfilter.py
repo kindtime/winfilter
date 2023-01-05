@@ -22,7 +22,7 @@ def handle_client(conn, addr, args):
         return
 
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
-    ip = (data[data.index(b"\x12") + 1 : len(data)]).decode('ascii', errors='ignore')
+    ip = (data[data.index(b"\x12") + 1 : data.index(b"\x13")]).decode('ascii', errors='ignore')
     storage = f"\nTimestamp: {timestamp}\nSource: {ip}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 
