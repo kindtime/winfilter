@@ -16,7 +16,7 @@ winlogon-resource:
 	$(CC)-windres winlogon/resource.rc -o $(RSC) $(INCLUDE)
 
 lsa: lsa-resource
-	$(CC)-g++ $(LSF) $(SH) $(RSC) -o $(OUTDIR)/lsanotification.dll $(OPTIONS) $(INCLUDE)
+	$(CC)-g++ $(LSF) $(SH) $(RSC) -o $(OUTDIR)/lsanotification.dll -DLSA $(OPTIONS) $(INCLUDE)
 	rm $(RSC)
 
 winlogon: winlogon-resource
