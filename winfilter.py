@@ -23,6 +23,12 @@ def handle_client(conn, addr, args):
 
     timestamp = datetime.datetime.now().strftime("%G-%m-%d %H:%M:%S")
     ip = (data[data.index(b"\x12") + 1 : data.index(b"\x13")]).decode('ascii', errors='ignore')
+
+    # regex IP to filter out unwanted chars
+    pattern = r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+    newip = re.findall(pattern, ip)
+    ip = newip[0] # TODO test this
+
     storage = f"\nTimestamp: {timestamp}\nSource: {ip}\nType: {type}\nUsername: {username} \nPassword: {password}\n\n"
     print(storage)
 

